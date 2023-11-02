@@ -1,0 +1,513 @@
+1. Introduction to Angular:
+   1. What is Angular? 
+   2. Why use Angular for front-end development?
+2. Setting Up an Angular Project:
+   1. Installing Angular CLI
+   2. Creating an Angular project
+   3. Project structure and configuration files
+3. Building Components and Templates:
+   1. Creating components
+   2. Creating Service
+   3. ng serve
+   4. Component Live Reload
+
+
+# Install Steps
+1. Download and Install node js lts
+2. Install Angular CLI
+3. Install angular material modules
+
+
+```bash
+npm install -g @angular/cli
+ng new angular_devops_demo
+# enable angular routing
+cd angular_devops_demo
+# install angular material ui to create a data table
+ng add @angular/material
+```
+
+# First Generate a new service for our frontend so that we can connect to the spring api
+`ng generate service services/student`
+
+
+# Add this Code to each individual file
+student.service.ts file
+```ts
+import { Injectable } from '@angular/core';
+import { HttpClient } from '@angular/common/http';
+import { Observable } from 'rxjs';
+
+@Injectable({
+  providedIn: 'root',
+})
+export class StudentService {
+  private apiUrl = 'http://localhost:8080/api/student';
+
+  constructor(private http: HttpClient) {}
+
+  getAllStudents(): Observable<any[]> {
+    return this.http.get<any[]>(`${this.apiUrl}`);
+  }
+
+  getStudentById(id: number): Observable<any> {
+    return this.http.get<any>(`${this.apiUrl}/${id}`);
+  }
+
+  addStudent(student: any): Observable<any> {
+    return this.http.post<any>(`${this.apiUrl}`, student);
+  }
+
+  addStudents(students: any[]): Observable<any[]> {
+    return this.http.post<any[]>(`${this.apiUrl}/bulk`, students);
+  }
+
+  updateStudent(id: number, student: any): Observable<any> {
+    student['id'] = id;
+    return this.http.put<any>(`${this.apiUrl}/${id}`, student);
+  }
+
+  deleteStudent(id: number): Observable<any> {
+    return this.http.delete<any>(`${this.apiUrl}/${id}`);
+  }
+
+  searchStudents(searchTerm: string): Observable<any[]> {
+    return this.http.get<any[]>(
+      `${this.apiUrl}/search?searchTerm=${searchTerm}`
+    );
+  }
+
+  private selectedStudent: any;
+  setSelectedStudent(student: any): void {
+    this.selectedStudent = student;
+  }
+
+  getSelectedStudent(): any {
+    return this.selectedStudent;
+  }
+}
+```
+
+# Now lets create a ui component so that we can create a modal popup
+`ng generate component student-add-edit-modal`
+
+# Edit this File and Paste this Content
+## student-add-edit-modal.component.css file
+```css
+.content {
+  display: flex;
+  flex-direction: column;
+  padding-bottom: 0px;
+}
+
+mat-form-field {
+  width: 500px;
+  padding: 0px 15px;
+}
+
+.action {
+  justify-content: space-around;
+}
+.action-button{
+    width:40%;
+}
+```
+
+## student-add-edit-modal.component.html file
+```html
+<div mat-dialog-title>
+  <h1>Student Form</h1>
+</div>
+
+<form [formGroup]="studentForm" (ngSubmit)="onFormSubmit()">
+  <div mat-dialog-content class="content">
+    <mat-form-field appearance="outline">
+      <mat-label>Roll Number</mat-label>
+
+      <input matInput formControlName="rollNo" required />
+      <mat-error *ngIf="studentForm.controls['rollNo'].invalid">
+        Roll Number required
+      </mat-error>
+    </mat-form-field>
+
+    <mat-form-field appearance="outline">
+      <mat-label>Branch</mat-label>
+      <input matInput formControlName="branch" required />
+
+      <mat-error *ngIf="studentForm.controls['branch'].invalid">
+        Branch required
+      </mat-error>
+    </mat-form-field>
+
+    <mat-form-field appearance="outline">
+      <mat-label>Full Name</mat-label>
+      <input matInput formControlName="fullName" required />
+      <mat-error *ngIf="studentForm.controls['fullName'].invalid">
+        Full Name required
+      </mat-error>
+    </mat-form-field>
+
+    <mat-form-field appearance="outline">
+      <mat-label>Email</mat-label>
+      <input matInput formControlName="email" required />
+      <mat-error *ngIf="studentForm.controls['email'].invalid">
+        Email required
+      </mat-error>
+    </mat-form-field>
+
+    <mat-form-field appearance="outline">
+      <mat-label>Phone Number</mat-label>
+      <input matInput formControlName="phoneNumber" required />
+      <mat-error *ngIf="studentForm.controls['phoneNumber'].invalid">
+        Phone Number required
+      </mat-error>
+    </mat-form-field>
+  </div>
+  <div mat-dialog-actions class="action">
+    <button
+      mat-raised-button
+      class="action-button"
+      type="reset"
+      (click)="onCloseClick()"
+    >
+      Close
+    </button>
+
+    <button
+      mat-raised-button
+      class="action-button"
+      color="primary"
+      type="submit"
+    >
+      {{ data ? "Update" : "Save" }}
+    </button>
+  </div>
+</form>
+```
+
+## student-add-edit-modal.component.ts file
+
+```ts
+import { Component, Inject, OnInit } from '@angular/core';
+import { FormBuilder, FormGroup, Validators } from '@angular/forms';
+import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
+import { StudentService } from '../services/student.service';
+
+@Component({
+  selector: 'app-student-add-edit-modal',
+  templateUrl: './student-add-edit-modal.component.html',
+  styleUrls: ['./student-add-edit-modal.component.css'],
+})
+export class StudentAddEditModalComponent implements OnInit {
+  studentForm: FormGroup;
+  constructor(
+    private _fb: FormBuilder,
+    private _dialogRef: MatDialogRef<StudentAddEditModalComponent>,
+    private _studentService: StudentService,
+    @Inject(MAT_DIALOG_DATA) public data: any
+  ) {
+    this.studentForm = this._fb.group({
+      rollNo: ['', Validators.required],
+      branch: ['', Validators.required],
+      fullName: ['', Validators.required],
+      email: ['', Validators.required],
+      phoneNumber: ['', Validators.required],
+    });
+  }
+
+  ngOnInit(): void {
+    this.studentForm.patchValue(this.data);
+  }
+
+  onFormSubmit() {
+    if (this.data) {
+      if (this.studentForm.valid) {
+        this._studentService.updateStudent(this.data.id,this.studentForm.value).subscribe({
+          next: (val: any) => {
+            console.log('Employee Details Updated', val);
+            this._dialogRef.close(true);
+          },
+          error: (err: any) => {
+            console.error(err);
+          },
+        });
+      }
+    } else {
+      if (this.studentForm.valid) {
+        this._studentService.addStudent(this.studentForm.value).subscribe({
+          next: (val: any) => {
+            console.log('Employee Added', val);
+            this._dialogRef.close(true);
+          },
+          error: (err: any) => {
+            console.error(err);
+          },
+        });
+      }
+    }
+  }
+
+  onCloseClick(): void {
+    this._dialogRef.close();
+  }
+}
+```
+
+# Now we have a working Component and Service lets edit the main module content to have a ui 
+
+## app.component.css file
+
+```css
+.example-spacer {
+  flex: 1 1 auto;
+}
+
+.main-body {
+  padding-top: 20px;
+  margin: 0 auto;
+  max-width: 1254px;
+}
+mat-form-field {
+  width: 100%;
+}
+```
+
+## app.component.html file
+
+```html
+<mat-toolbar color="primary">
+  <span>CRUD Application</span>
+  <span class="example-spacer"></span>
+  <button mat-raised-button (click)="openStudentAddModal()">Add Student</button>
+</mat-toolbar>
+
+<div class="main-body">
+  <mat-form-field>
+    <mat-label>Filter</mat-label>
+    <input
+      matInput
+      (keyup)="applyFilter($event)"
+      placeholder="Ex. Mia"
+      #input
+    />
+  </mat-form-field>
+
+  <div class="mat-elevation-z8">
+    <table mat-table [dataSource]="dataSource" matSort>
+      <!-- ID Column -->
+      <ng-container matColumnDef="id">
+        <th mat-header-cell *matHeaderCellDef mat-sort-header>ID</th>
+        <td mat-cell *matCellDef="let row">{{ row.id }}</td>
+      </ng-container>
+
+      <!-- Roll Number Column -->
+      <ng-container matColumnDef="rollNo">
+        <th mat-header-cell *matHeaderCellDef mat-sort-header>Roll Number</th>
+        <td mat-cell *matCellDef="let row">{{ row.rollNo }}</td>
+      </ng-container>
+
+      <!-- Branch Column -->
+      <ng-container matColumnDef="branch">
+        <th mat-header-cell *matHeaderCellDef mat-sort-header>Branch</th>
+        <td mat-cell *matCellDef="let row">{{ row.branch }}</td>
+      </ng-container>
+
+      <!-- Full Name Column -->
+      <ng-container matColumnDef="fullName">
+        <th mat-header-cell *matHeaderCellDef mat-sort-header>Full Name</th>
+        <td mat-cell *matCellDef="let row">{{ row.fullName }}</td>
+      </ng-container>
+
+      <!-- Email Column -->
+      <ng-container matColumnDef="email">
+        <th mat-header-cell *matHeaderCellDef mat-sort-header>Email</th>
+        <td mat-cell *matCellDef="let row">{{ row.email }}</td>
+      </ng-container>
+
+      <!-- Phone Number Column -->
+      <ng-container matColumnDef="phoneNumber">
+        <th mat-header-cell *matHeaderCellDef mat-sort-header>Phone Number</th>
+        <td mat-cell *matCellDef="let row">{{ row.phoneNumber }}</td>
+      </ng-container>
+
+      <!-- Action Column -->
+      <ng-container matColumnDef="action">
+        <th mat-header-cell *matHeaderCellDef mat-sort-header>Action</th>
+        <td mat-cell *matCellDef="let row">
+          <button
+            mat-icon-button
+            color="primary"
+            (click)="openStudentEditModal(row)"
+          >
+            <mat-icon>edit</mat-icon>
+          </button>
+          <button mat-icon-button color="warn" (click)="deleteStudent(row.id)">
+            <mat-icon>delete</mat-icon>
+          </button>
+        </td>
+      </ng-container>
+
+      <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+      <tr mat-row *matRowDef="let row; columns: displayedColumns"></tr>
+
+      <!-- Row shown when there is no matching data. -->
+      <tr class="mat-row" *matNoDataRow>
+        <td class="mat-cell" colspan="4">
+          No data matching the filter "{{ input.value }}"
+        </td>
+      </tr>
+    </table>
+
+    <mat-paginator
+      [pageSizeOptions]="[5, 10, 25, 100]"
+      aria-label="Select page of users"
+    ></mat-paginator>
+  </div>
+</div>
+```
+
+## app-component.ts file
+
+```html
+import { MatDialog } from '@angular/material/dialog';
+import { StudentAddEditModalComponent } from './student-add-edit-modal/student-add-edit-modal.component';
+import { StudentService } from './services/student.service';
+import { Component, ViewChild, OnInit } from '@angular/core';
+import { MatPaginator } from '@angular/material/paginator';
+import { MatSort } from '@angular/material/sort';
+import { MatTableDataSource } from '@angular/material/table';
+
+@Component({
+  selector: 'app-root',
+  templateUrl: './app.component.html',
+  styleUrls: ['./app.component.css'],
+})
+export class AppComponent implements OnInit {
+  displayedColumns: string[] = [
+    'id',
+    'rollNo',
+    'branch',
+    'fullName',
+    'email',
+    'phoneNumber',
+    'action',
+  ];
+  dataSource!: MatTableDataSource<any>;
+
+  @ViewChild(MatPaginator) paginator!: MatPaginator;
+  @ViewChild(MatSort) sort!: MatSort;
+
+  constructor(
+    private _dialog: MatDialog,
+    private _studentService: StudentService
+  ) {}
+
+  ngOnInit(): void {
+    this.getStudentsList();
+  }
+
+  openStudentAddModal() {
+    const dialogRef = this._dialog.open(StudentAddEditModalComponent);
+    dialogRef.afterClosed().subscribe({
+      next: (res) => {
+        if (res) {
+          this.getStudentsList();
+        }
+      },
+      error: (err) => {},
+    });
+  }
+
+  getStudentsList() {
+    this._studentService.getAllStudents().subscribe({
+      next: (res) => {
+        this.dataSource = new MatTableDataSource(res);
+        this.dataSource.sort = this.sort;
+        this.dataSource.paginator = this.paginator;
+      },
+      error: (err) => {
+        console.log(err);
+      },
+    });
+  }
+
+  applyFilter(event: Event) {
+    const filterValue = (event.target as HTMLInputElement).value;
+    this.dataSource.filter = filterValue.trim().toLowerCase();
+
+    if (this.dataSource.paginator) {
+      this.dataSource.paginator.firstPage();
+    }
+  }
+
+  deleteStudent(id: number) {
+    this._studentService.deleteStudent(id).subscribe({
+      next: (res) => {
+        this.getStudentsList();
+      },
+      error: (err) => {
+        console.log(err);
+      },
+    });
+  }
+
+  openStudentEditModal(data: any) {
+    const dialogRef = this._dialog.open(StudentAddEditModalComponent, { data });
+
+    dialogRef.afterClosed().subscribe({
+      next: (res) => {
+        if (res) {
+          this.getStudentsList();
+        }
+      },
+      error: (err) => {},
+    });
+  }
+}
+```
+
+## app-module.ts file
+```ts
+import { NgModule } from '@angular/core';
+import { BrowserModule } from '@angular/platform-browser';
+import { AppRoutingModule } from './app-routing.module';
+import { AppComponent } from './app.component';
+import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
+import { MatToolbarModule } from '@angular/material/toolbar';
+import { MatIconModule } from '@angular/material/icon';
+import { MatButtonModule } from '@angular/material/button';
+import { MatDialogModule } from '@angular/material/dialog';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatInputModule } from '@angular/material/input';
+import { StudentAddEditModalComponent } from './student-add-edit-modal/student-add-edit-modal.component';
+import { ReactiveFormsModule } from '@angular/forms';
+import { HttpClientModule } from '@angular/common/http';
+import { MatTableModule } from '@angular/material/table';
+import { MatPaginatorModule } from '@angular/material/paginator';
+import { MatSortModule } from '@angular/material/sort';
+
+@NgModule({
+  declarations: [AppComponent, StudentAddEditModalComponent],
+  imports: [
+    BrowserModule,
+    AppRoutingModule,
+    BrowserAnimationsModule,
+    MatToolbarModule,
+    MatIconModule,
+    MatButtonModule,
+    MatDialogModule,
+    MatFormFieldModule,
+    MatInputModule,
+    ReactiveFormsModule,
+    HttpClientModule,
+    MatTableModule,
+    MatPaginatorModule,
+    MatSortModule,
+  ],
+  providers: [],
+  bootstrap: [AppComponent],
+})
+export class AppModule {}
+
+
+```
