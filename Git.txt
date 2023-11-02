@@ -1,0 +1,110 @@
+1. Introduction to Version Control:
+   1. What is version control?
+   2. Why use version control?
+
+2. Git Basics:
+   1. Setting up Git
+   2. Git configuration
+   3. Initializing a repository
+   4. Basic Git commands (add, commit, status, log)
+
+3. Collaboration with Git:
+   1. Cloning repositories
+   2. Pulling and pushing changes
+
+4. Branching and Merging:
+   1. Creating branches
+   2. Switching between branches
+   3. Merging branches
+   4. Resolving merge conflicts
+
+# SQL
+
+1. Brief overview of SQL (Structured Query Language)
+   1. sql vs nosql
+   2. mysql vs mariadb
+2. Basic SQL Syntax 
+   1. CRUD Operations(SELECT, INSERT, UPDATE, DELETE, WHERE)
+   2. Basic (Create, Show, Use)
+3. Security and Permissions
+   1. User Management
+   2. GRANT and REVOKE statements
+4. Importance of SQL in DevOps administration
+   1. Automation and SQL in DevOps
+   2. Integration of SQL in DevOps workflows
+   3. Automation scripts and SQL
+
+
+```sql
+mysql -u root -p'P@ssw0rd';
+select Host,User,Password from mysql.user;
+
+-- Create a new user
+CREATE USER 'temp_user'@'localhost' IDENTIFIED BY 'password';
+
+-- Grant SELECT and INSERT permissions on the students table
+GRANT SELECT, INSERT ON devops_demo.students TO 'temp_user'@'localhost';
+
+-- Show the current privileges for the new user
+SHOW GRANTS FOR 'temp_user'@'localhost';
+
+-- Revoke INSERT permission from the new user
+REVOKE INSERT ON devops_demo.students FROM 'temp_user'@'localhost';
+
+-- Show the updated privileges for the new user
+SHOW GRANTS FOR 'temp_user'@'localhost';
+```
+
+1. git and github practice projectgs
+2. crate java project, angular project, sql project 
+3. install mysql and ww3schools mysql tutorial
+4. go though basics of java and spring boot.
+
+
+
+
+Documentation in Linux is Called manual Pages in Short Man Pages
+
+
+man <command>
+
+Git Push, Pull, Clone
+
+
+
+ls => Listall files in current dirctory
+cd => change directory
+
+
+
+
+Git Repository => Windows Folder
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Bash(ubntu linux)
+Python
+
+Monitoring
+sql(database engineer, 30%)
+
+CiCd(groovy, python, yaml)30%
+
+Ubuntu,Cloud,Docker(Python, Bash Scripting)100%
+
+
+Deployment of app(Maven, Gradle, Ant, Node, Angular, Html,Css,Javascript)20%
+
+devops 1 sql admin, api admin, api tester,
